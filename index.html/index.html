@@ -147,11 +147,12 @@
 </div>
 
 <script>
-    // --- تنظیمات امنیتی تیم ---
-    const TEAM_USER = "GRAPHIC"; // یوزرنیم تیم
-    const TEAM_PASS = "12A1212"; // پسورد تیم
-    const WORKER_URL = "https://soft-butterfly-d6ecenvato-downloader.aliniashyn-9b4.workers.dev/"; // آدرس کلودفلر شما
+    // --- تنظیمات اختصاصی ---
+    const TEAM_USER = "admin"; // نام کاربری تیم
+    const TEAM_PASS = "12345"; // رمز عبور تیم
+    const WORKER_URL = "https://soft-butterfly-d6ecenvato-downloader.aliniashyn-9b4.workers.dev/"; 
 
+    // تابع بررسی ورود
     function checkLogin() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
@@ -163,12 +164,14 @@
         }
     }
 
+    // تابع اصلی درخواست دانلود
     async function requestDownload() {
-        const url = document.getElementById('envatoUrl').value;
-        if(!url) return alert("لینک را وارد کنید");
+        const urlInput = document.getElementById('envatoUrl').value;
+        if(!urlInput) return alert("لطفا لینک را وارد کنید");
 
         const loader = document.getElementById('loader');
         const resultArea = document.getElementById('result-area');
+        const dlBtn = document.getElementById('download-link');
 
         loader.style.display = 'block';
         resultArea.style.display = 'none';
@@ -177,7 +180,7 @@
             const response = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
+                body: JSON.stringify({ url: urlInput })
             });
             
             const data = await response.json();
@@ -185,15 +188,22 @@
             if(data.download_url) {
                 loader.style.display = 'none';
                 resultArea.style.display = 'block';
-                document.getElementById('download-link').onclick = () => {
-                    window.location.href = data.download_url;
+
+                // اصلاح دکمه برای باز کردن در تب جدید (جلوگیری از 404 و بلاک شدن)
+                // ایجاد یک دکمه تازه برای حذف رویدادهای قبلی
+                const newBtn = dlBtn.cloneNode(true);
+                dlBtn.parentNode.replaceChild(newBtn, dlBtn);
+                
+                newBtn.onclick = function() {
+                    window.open(data.download_url, '_blank');
                 };
             } else {
-                alert("خطا: اشتراک شما این فایل را پوشش نمی‌دهد یا لینک اشتباه است.");
+                alert("خطا: لینک معتبر نیست یا سرور پاسخ نمی‌دهد.");
                 loader.style.display = 'none';
             }
         } catch (error) {
-            alert("خطا در اتصال به سرور واسطه");
+            console.error(error);
+            alert("خطا در اتصال به سرور واسطه (کلودفلر)");
             loader.style.display = 'none';
         }
     }
@@ -201,6 +211,7 @@
 </body>
 
 </html>
+
 
 
 
