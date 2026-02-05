@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envato Team Access | Private</title>
+    <link rel="icon" type="image/webp" href="unnamed.webp">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --envato: #82b440;
+            --bg: #0f172a;
+            --surface: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: white; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* بخش لاگین */
+        #login-page {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .login-card img { height: 60px; margin-bottom: 20px; border-radius: 10px; }
+
+        /* بخش اصلی پنل (در ابتدا مخفی) */
+        #main-panel { display: none; }
+
+        header { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand img { height: 35px; border-radius: 6px; }
+        .brand h1 { color: #0f172a; margin: 0; font-size: 18px; }
+
+        .container { max-width: 800px; margin: 60px auto; padding: 0 20px; }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-login { background: var(--primary); color: white; width: 100%; margin-top: 15px; }
+        .btn-envato { background: var(--envato); color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .result-card {
+            background: rgba(255,255,255,0.05);
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--envato);
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; margin: 15px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="login-page">
+    <div class="login-card">
+        <img src="unnamed.webp" alt="Logo">
+        <h2 style="margin-top: 0;">ورود به پنل تیم گرافیک</h2>
+        <input type="text" id="user" placeholder="نام کاربری" style="width: 85%; margin-bottom: 10px;">
+        <input type="password" id="pass" placeholder="رمز عبور" style="width: 85%;">
+        <button class="btn-login" onclick="checkLogin()">ورود</button>
+        <p id="login-err" style="color: red; font-size: 12px; margin-top: 10px; display: none;">اطلاعات اشتباه است!</p>
+    </div>
+</div>
+
+<div id="main-panel">
+    <header>
+        <div class="brand">
+            <img src="unnamed.webp" alt="Logo">
+            <h1>ENVATO <span>TEAM GATEWAY</span></h1>
+        </div>
+        <button onclick="location.reload()" style="background: #f1f5f9; color: #64748b; font-size: 12px;">خروج</button>
+    </header>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: var(--envato);">Direct Download Tool</h2>
+            <p style="color: #94a3b8;">لینک فایل Elements یا Market را وارد کنید</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="envatoUrl" placeholder="https://elements.envato.com/...">
+            <button class="btn-envato" onclick="requestDownload()">دریافت فایل</button>
+        </div>
+
+        <div id="loader" class="loader"></div>
+        
+        <div id="result-area" class="result-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0; color: var(--envato);">فایل تایید شد</h4>
+                    <small id="file-info" style="color: #94a3b8;">آماده دریافت توسط اشتراک اصلی</small>
+                </div>
+                <button class="btn-envato" id="download-link">دانلود مستقیم</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- تنظیمات امنیتی تیم ---
+    const TEAM_USER = "GRAPHIC"; // یوزرنیم تیم
+    const TEAM_PASS = "12A1212"; // پسورد تیم
+    const WORKER_URL = "https://your-worker.workers.dev/"; // آدرس کلودفلر شما
+
+    function checkLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        if(u === TEAM_USER && p === TEAM_PASS) {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-panel').style.display = 'block';
+        } else {
+            document.getElementById('login-err').style.display = 'block';
+        }
+    }
+
+    async function requestDownload() {
+        const url = document.getElementById('envatoUrl').value;
+        if(!url) return alert("لینک را وارد کنید");
+
+        const loader = document.getElementById('loader');
+        const resultArea = document.getElementById('result-area');
+
+        loader.style.display = 'block';
+        resultArea.style.display = 'none';
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            
+            const data = await response.json();
+
+            if(data.download_url) {
+                loader.style.display = 'none';
+                resultArea.style.display = 'block';
+                document.getElementById('download-link').onclick = () => {
+                    window.location.href = data.download_url;
+                };
+            } else {
+                alert("خطا: اشتراک شما این فایل را پوشش نمی‌دهد یا لینک اشتباه است.");
+                loader.style.display = 'none';
+            }
+        } catch (error) {
+            alert("خطا در اتصال به سرور واسطه");
+            loader.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
